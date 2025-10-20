@@ -22,24 +22,29 @@ std::span<const wxString> doc_parser::extensions() const {
 }
 
 std::unique_ptr<document> doc_parser::load(const wxString& path) const {
-    wxFileName temp_dir(wxStandardPaths::Get().GetTempDir(), "paperback");
-    if (!temp_dir.DirExists()) {
-        temp_dir.Mkdir();
-    }
+	wxFileName temp_dir(wxStandardPaths::Get().GetTempDir(), "paperback");
+	if (!temp_dir.DirExists()) {
+		temp_dir.Mkdir();
+	}
 
-    wxString command = wxString::Format("soffice --headless --convert-to html \"%s\" --outdir \"%s\"", path, temp_dir.GetPath());
-    if (wxExecute(command, wxEXEC_SYNC) != 0) {
-        return nullptr;
-    }
+	wxString soffice_path = wxGetApp().get_config_manager().get_soffice_path();
+	if (soffice_path.IsEmpty()) {
+		soffice_path = "soffice";
+	}
 
-    wxFileName html_path(temp_dir.GetPath(), wxFileName(path).GetName(), "html");
+	wxString command = wxString::Format("\"%s\" --headless --convert-to html \"%s\" --outdir \"%s\"", soffice_path, path, temp_dir.GetPath());
+	if (wxExecute(command, wxEXEC_SYNC) != 0) {
+		return nullptr;
+	}
 
-    html_parser parser;
-    auto doc = parser.load(html_path.GetFullPath());
+	wxFileName html_path(temp_dir.GetPath(), wxFileName(path).GetName(), "html");
 
-    wxRemoveFile(html_path.GetFullPath());
+	html_parser parser;
+	auto doc = parser.load(html_path.GetFullPath());
 
-    return doc;
+	wxRemoveFile(html_path.GetFullPath());
+
+	return doc;
 }
 
 REGISTER_PARSER(doc_parser);
