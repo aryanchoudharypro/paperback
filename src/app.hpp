@@ -41,14 +41,15 @@ public:
 	void parse_command_line();
 	void restore_previous_documents();
 	[[nodiscard]] config_manager& get_config_manager() { return config_mgr; }
-	void open_file(const wxString& filename);
-
-private:
-	main_window* frame{nullptr};
-	config_manager config_mgr;
-	std::unique_ptr<wxSingleInstanceChecker> single_instance_checker;
-	std::unique_ptr<paperback_server> ipc_server;
-	void load_default_config();
-};
+	        void open_file(const wxString& filename);
+	        [[nodiscard]] bool is_soffice_found() const { return soffice_found_; }
+	        void check_for_soffice();
+	    
+	    private:	    main_window* frame{nullptr};
+	    config_manager config_mgr;
+	    std::unique_ptr<wxSingleInstanceChecker> single_instance_checker;
+	    std::unique_ptr<paperback_server> ipc_server;
+	    bool soffice_found_{false};
+	    void load_default_config();};
 
 wxDECLARE_APP(app);

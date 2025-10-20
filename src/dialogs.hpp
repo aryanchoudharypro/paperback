@@ -215,19 +215,23 @@ public:
 	void set_compact_go_menu(bool compact);
 	int get_recent_documents_to_show() const;
 	void set_recent_documents_to_show(int count);
-	wxString get_language() const;
-	void set_language(const wxString& language);
-
-private:
-	wxCheckBox* restore_docs_check{nullptr};
-	wxCheckBox* word_wrap_check{nullptr};
-	wxCheckBox* minimize_to_tray_check{nullptr};
-	wxCheckBox* compact_go_menu_check{nullptr};
-	wxSpinCtrl* recent_docs_count_spin{nullptr};
-	wxComboBox* language_combo{nullptr};
-
-	void on_ok(wxCommandEvent& event);
-	void on_cancel(wxCommandEvent& event);
+	    wxString get_language() const;
+	    void set_language(const wxString& language);
+	    wxString get_soffice_path() const;
+	    void set_soffice_path(const wxString& path);
+	
+	private:
+	    wxCheckBox* restore_docs_check{nullptr};
+	    wxCheckBox* word_wrap_check{nullptr};
+	    wxCheckBox* minimize_to_tray_check{nullptr};
+	    wxCheckBox* compact_go_menu_check{nullptr};
+	    wxSpinCtrl* recent_docs_count_spin{nullptr};
+	    wxComboBox* language_combo{nullptr};
+	        wxTextCtrl* soffice_path_ctrl{nullptr};
+	    
+	        void on_ok(wxCommandEvent& event);
+	        void on_cancel(wxCommandEvent& event);
+	        void on_browse_soffice(wxCommandEvent& event);
 };
 
 class toc_tree_item_data : public wxTreeItemData {

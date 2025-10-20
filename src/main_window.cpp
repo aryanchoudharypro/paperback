@@ -527,24 +527,31 @@ void main_window::on_options(wxCommandEvent&) {
 	dlg.set_word_wrap(config_mgr.get_word_wrap());
 	dlg.set_minimize_to_tray(config_mgr.get_minimize_to_tray());
 	dlg.set_compact_go_menu(config_mgr.get_compact_go_menu());
-	dlg.set_recent_documents_to_show(config_mgr.get_recent_documents_to_show());
-	wxString current_language = translation_manager::instance().get_current_language();
-	dlg.set_language(current_language);
-	if (dlg.ShowModal() != wxID_OK) {
-		return;
-	}
-	bool old_word_wrap = config_mgr.get_word_wrap();
-	bool new_word_wrap = dlg.get_word_wrap();
-	bool old_compact_menu = config_mgr.get_compact_go_menu();
-	bool new_compact_menu = dlg.get_compact_go_menu();
-	wxString new_language = dlg.get_language();
-	config_mgr.set_restore_previous_documents(dlg.get_restore_previous_documents());
-	config_mgr.set_word_wrap(new_word_wrap);
-	config_mgr.set_minimize_to_tray(dlg.get_minimize_to_tray());
-	config_mgr.set_compact_go_menu(new_compact_menu);
-	config_mgr.set_recent_documents_to_show(dlg.get_recent_documents_to_show());
-	config_mgr.set_language(new_language);
-	if (old_word_wrap != new_word_wrap) {
+	    dlg.set_recent_documents_to_show(config_mgr.get_recent_documents_to_show());
+	    wxString current_language = translation_manager::instance().get_current_language();
+	    dlg.set_language(current_language);
+	    dlg.set_soffice_path(config_mgr.get_soffice_path());
+	
+	    if (dlg.ShowModal() != wxID_OK) {
+	        return;
+	    }
+	
+	    bool old_word_wrap = config_mgr.get_word_wrap();
+	    bool new_word_wrap = dlg.get_word_wrap();
+	    bool old_compact_menu = config_mgr.get_compact_go_menu();
+	    bool new_compact_menu = dlg.get_compact_go_menu();
+	    wxString new_language = dlg.get_language();
+	    config_mgr.set_restore_previous_documents(dlg.get_restore_previous_documents());
+	    config_mgr.set_word_wrap(new_word_wrap);
+	    config_mgr.set_minimize_to_tray(dlg.get_minimize_to_tray());
+	    config_mgr.set_compact_go_menu(new_compact_menu);
+	        config_mgr.set_recent_documents_to_show(dlg.get_recent_documents_to_show());
+	        config_mgr.set_language(new_language);
+	        config_mgr.set_soffice_path(dlg.get_soffice_path());
+	    
+	        wxGetApp().check_for_soffice();
+	    
+	        if (old_word_wrap != new_word_wrap) {
 		doc_manager->apply_word_wrap(new_word_wrap);
 		if (active_text_ctrl && doc_manager->get_active_text_ctrl()) {
 			doc_manager->get_active_text_ctrl()->SetFocus();

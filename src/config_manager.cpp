@@ -247,6 +247,20 @@ void config_manager::set_language(const wxString& language) {
 	});
 }
 
+wxString config_manager::get_soffice_path() const {
+	wxString result = "";
+	with_app_section([this, &result]() {
+		result = config->Read("soffice_path", "");
+	});
+	return result;
+}
+
+void config_manager::set_soffice_path(const wxString& path) {
+	with_app_section([this, path]() {
+		config->Write("soffice_path", path);
+	});
+}
+
 int config_manager::get_config_version() const {
 	int version = CONFIG_VERSION_LEGACY;
 	with_app_section([this, &version]() {

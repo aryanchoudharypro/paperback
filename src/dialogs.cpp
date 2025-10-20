@@ -477,10 +477,29 @@ options_dialog::options_dialog(wxWindow* parent) : dialog(parent, _("Options")) 
 	language_sizer->Add(language_label, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
 	language_sizer->Add(language_combo, 0, wxALIGN_CENTER_VERTICAL);
 	general_box->Add(language_sizer, 0, wxALL, 5);
+
+	auto* soffice_sizer = new wxBoxSizer(wxHORIZONTAL);
+	auto* soffice_label = new wxStaticText(this, wxID_ANY, _("s&office executable path:"));
+	soffice_path_ctrl = new wxTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxSize(300, -1));
+	auto* browse_button = new wxButton(this, wxID_ANY, _("&Browse..."));
+	soffice_sizer->Add(soffice_label, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 10);
+	soffice_sizer->Add(soffice_path_ctrl, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	soffice_sizer->Add(browse_button, 0, wxALIGN_CENTER_VERTICAL);
+	general_box->Add(soffice_sizer, 0, wxEXPAND | wxALL, 5);
+
 	set_content(general_box);
+	browse_button->Bind(wxEVT_BUTTON, &options_dialog::on_browse_soffice, this);
 	Bind(wxEVT_BUTTON, &options_dialog::on_ok, this, wxID_OK);
 	Bind(wxEVT_BUTTON, &options_dialog::on_cancel, this, wxID_CANCEL);
 	finalize_layout();
+}
+
+void options_dialog::on_browse_soffice(wxCommandEvent& event) {
+    wxFileDialog openFileDialog(this, _("Select soffice executable"), "", "", "soffice.exe|soffice.exe|soffice|soffice|All files (*.*)|*.*", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+    if (openFileDialog.ShowModal() == wxID_CANCEL) {
+        return;
+    }
+    soffice_path_ctrl->SetValue(openFileDialog.GetPath());
 }
 
 bool options_dialog::get_restore_previous_documents() const {
@@ -546,16 +565,26 @@ wxString options_dialog::get_language() const {
 }
 
 void options_dialog::set_language(const wxString& language) {
-	if (!language_combo) {
-		return;
-	}
-	for (unsigned int i = 0; i < language_combo->GetCount(); ++i) {
-		wxStringClientData* data = static_cast<wxStringClientData*>(language_combo->GetClientObject(i));
-		if (data && data->GetData() == language) {
-			language_combo->SetSelection(i);
-			return;
-		}
-	}
+    if (!language_combo) {
+        return;
+    }
+    for (unsigned int i = 0; i < language_combo->GetCount(); ++i) {
+        wxStringClientData* data = static_cast<wxStringClientData*>(language_combo->GetClientObject(i));
+        if (data && data->GetData() == language) {
+            language_combo->SetSelection(i);
+            return;
+        }
+    }
+}
+
+wxString options_dialog::get_soffice_path() const {
+    return soffice_path_ctrl ? soffice_path_ctrl->GetValue() : wxString("");
+}
+
+void options_dialog::set_soffice_path(const wxString& path) {
+    if (soffice_path_ctrl) {
+        soffice_path_ctrl->SetValue(path);
+    }
 }
 
 void options_dialog::on_ok(wxCommandEvent& event) {

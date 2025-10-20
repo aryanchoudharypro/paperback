@@ -31,11 +31,21 @@ wxConnectionBase* paperback_server::OnAcceptConnection(const wxString& topic) {
 	return nullptr;
 }
 
+void app::check_for_soffice() {
+    wxString soffice_path = config_mgr.get_soffice_path();
+    if (!soffice_path.IsEmpty() && wxFileName::FileExists(soffice_path)) {
+        soffice_found_ = true;
+        return;
+    }
+    soffice_found_ = command_exists("soffice");
+}
+
 bool app::OnInit() {
 	if (!config_mgr.initialize()) {
 		wxMessageBox(_("Failed to initialize configuration"), _("Error"), wxICON_ERROR);
 		return false;
 	}
+	check_for_soffice();
 	translation_manager::instance().initialize();
 	wxString preferred_language = config_mgr.get_language();
 	if (!preferred_language.IsEmpty()) {

@@ -163,6 +163,10 @@ std::string remove_soft_hyphens(std::string_view input) {
 }
 
 const parser* get_parser_for_unknown_file(const wxString& path, config_manager& config) {
+	wxString ext = wxFileName(path).GetExt().Lower();
+	if (!wxGetApp().is_soffice_found() && (ext == "doc" || ext == "rtf")) {
+		wxMessageBox(_("You need to have soffice in your path to open these files, or set the path in the app settings."), _("Information"), wxOK | wxICON_INFORMATION);
+	}
 	wxString saved_format = config.get_document_format(path);
 	if (!saved_format.IsEmpty()) {
 		auto* par = find_parser_by_extension(saved_format);
@@ -349,5 +353,15 @@ wxZipEntry* find_zip_entry(const std::string& filename, const std::map<std::stri
 			}
 		}
 	} catch (const Poco::Exception&) {}
-	return nullptr;
+    return entries.count(filename) > 0 ? entries.at(filename) : nullptr;
+}
+
+bool command_exists(const wxString& command) {
+#ifdef __WXMSW__
+    // Use the 'where' command on Windows to check for the executable
+    return wxExecute(wxString::Format("where %s", command), wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE) == 0;
+#else
+    // Use the 'which' command on Unix-like systems
+    return wxExecute(wxString::Format("which %s", command), wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE) == 0;
+#endif
 }
