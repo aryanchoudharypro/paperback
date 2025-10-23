@@ -87,7 +87,6 @@ void html_to_text::process_node(lxb_dom_node_t* node) {
 	if (node == nullptr) {
 		return;
 	}
-    bool skip_children = false;
 	std::string_view tag_name;
 	size_t link_start_pos = 0;
 	const bool is_element = (node->type == LXB_DOM_NODE_TYPE_ELEMENT);
@@ -122,12 +121,9 @@ void html_to_text::process_node(lxb_dom_node_t* node) {
 			} else if (tag_name == "br" || tag_name == "li") {
 				finalize_current_line();
 			} else if (tag_name == "table") {
-                skip_children = true;
 				finalize_current_line();
 				std::string table_html_content = extract_table_text(node);
-                std::string plain_text = get_plain_text_for_table(node);
-				tables.push_back({get_current_text_position(), plain_text, table_html_content});
-                current_line += plain_text;
+				// tables.push_back({get_current_text_position(), "[Table]", table_html_content}); // Add this if 'tables' is a member
 			}
 			if (in_body && element != nullptr) {
 				size_t id_len{0};
@@ -344,43 +340,6 @@ std::string html_to_text::get_element_text(lxb_dom_element_t* element) {
 		return {};
 	}
 	return std::string{reinterpret_cast<const char*>(text), text_length};
-}
-
-std::string html_to_text::get_plain_text_for_table(lxb_dom_node_t* table_node) {
-    std::string table_text;
-
-    auto process_row = [&](lxb_dom_node_t* row_node) {
-        for (lxb_dom_node_t* cell_node = row_node->first_child; cell_node; cell_node = cell_node->next) {
-            if (cell_node->type == LXB_DOM_NODE_TYPE_ELEMENT) {
-                std::string_view cell_tag_name = get_tag_name(lxb_dom_interface_element(cell_node));
-                if (cell_tag_name == "td" || cell_tag_name == "th") {
-                    table_text += get_element_text(lxb_dom_interface_element(cell_node));
-                    table_text += "\t";
-                }
-            }
-        }
-        if (!table_text.empty() && table_text.back() == '\t') {
-            table_text.pop_back();
-        }
-        table_text += "\n";
-    };
-
-    for (lxb_dom_node_t* child = table_node->first_child; child; child = child->next) {
-        if (child->type == LXB_DOM_NODE_TYPE_ELEMENT) {
-            std::string_view tag_name = get_tag_name(lxb_dom_interface_element(child));
-            if (tag_name == "thead" || tag_name == "tbody" || tag_name == "tfoot") {
-                for (lxb_dom_node_t* row_node = child->first_child; row_node; row_node = row_node->next) {
-                    if (row_node->type == LXB_DOM_NODE_TYPE_ELEMENT && get_tag_name(lxb_dom_interface_element(row_node)) == "tr") {
-                        process_row(row_node);
-                    }
-                }
-            } else if (tag_name == "tr") {
-                process_row(child);
-            }
-        }
-    }
-
-    return table_text;
 }
 
 std::string html_to_text::extract_table_text(lxb_dom_node_t* table_node) {
