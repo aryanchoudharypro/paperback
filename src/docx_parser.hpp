@@ -34,6 +34,7 @@ private:
 	void traverse(Poco::XML::Node* node, wxString& text, std::vector<heading_info>& headings, document* doc, const std::map<std::string, std::string>& rels) const;
 	static void process_paragraph(Poco::XML::Element* pElement, wxString& text, std::vector<heading_info>& headings, document* doc, const std::map<std::string, std::string>& rels);
 	static void process_hyperlink(Poco::XML::Element* element, wxString& text, document* doc, const std::map<std::string, std::string>& rels, size_t paragraph_start_offset);
+	static void process_table(Poco::XML::Element* table_element, wxString& text, document* doc);
 	static int get_heading_level(Poco::XML::Element* pr_element);
 	static std::string get_run_text(Poco::XML::Element* prun_element);
 	static std::string parse_hyperlink_instruction(const std::string& instruction);
