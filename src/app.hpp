@@ -45,12 +45,15 @@ public:
 	main_window* create_new_window(const wxString& path = "");
 	void remove_window(main_window* frame);
 	void update_all_windows_ui();
+	[[nodiscard]] bool is_soffice_found() const { return soffice_found_; }
+	void check_for_soffice();
 
 private:
 	std::vector<main_window*> frames;
 	config_manager config_mgr;
 	std::unique_ptr<wxSingleInstanceChecker> single_instance_checker;
 	std::unique_ptr<paperback_server> ipc_server;
+	bool soffice_found_{false};
 	void load_default_config();
 };
 

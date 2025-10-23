@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Quin Gillespie.
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "utils.hpp"
@@ -26,8 +26,11 @@
 #include <string>
 #include <string_view>
 #include <wx/defs.h>
+#include <wx/filename.h>
+#include <wx/msgdlg.h>
 #include <wx/strconv.h>
 #include <wx/string.h>
+#include <wx/utils.h>
 #include <wx/zipstrm.h>
 
 namespace {
@@ -173,6 +176,10 @@ std::string remove_soft_hyphens(std::string_view input) {
 }
 
 const parser* get_parser_for_unknown_file(const wxString& path, config_manager& config) {
+	wxString ext = wxFileName(path).GetExt().Lower();
+	if (!wxGetApp().is_soffice_found() && (ext == "doc" || ext == "rtf")) {
+		wxMessageBox(_("You need to have soffice in your path to open these files, or set the path in the app settings."), _("Information"), wxOK | wxICON_INFORMATION);
+	}
 	const wxString saved_format = config.get_document_format(path);
 	if (!saved_format.IsEmpty()) {
 		const auto* par = find_parser_by_extension(saved_format);
@@ -363,4 +370,14 @@ wxZipEntry* find_zip_entry(const std::string& filename, const std::map<std::stri
 		return nullptr;
 	}
 	return nullptr;
+}
+
+bool command_exists(const wxString& command) {
+#ifdef __WXMSW__
+    // Use the 'where' command on Windows to check for the executable
+    return wxExecute(wxString::Format("where %s", command), wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE) == 0;
+#else
+    // Use the 'which' command on Unix-like systems
+    return wxExecute(wxString::Format("which %s", command), wxEXEC_SYNC | wxEXEC_HIDE_CONSOLE) == 0;
+#endif
 }

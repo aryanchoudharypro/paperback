@@ -68,9 +68,10 @@ public:
 	bool get_check_for_updates_on_startup() const;
 	void set_check_for_updates_on_startup(bool check);
 	wxString get_language() const;
-	void set_language(const wxString& language);
-	void set_active_document(const wxString& path);
-	wxString get_active_document() const;
+	    void set_language(const wxString& language);
+	    wxString get_soffice_path() const;
+	    void set_soffice_path(const wxString& path);
+	    void set_active_document(const wxString& path);	wxString get_active_document() const;
 	void add_opened_document(const wxString& path);
 	void remove_opened_document(const wxString& path);
 	wxArrayString get_opened_documents() const;
