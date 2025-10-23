@@ -20,6 +20,8 @@
 #include <Poco/Exception.h>
 #include <Poco/SAX/InputSource.h>
 #include <Poco/SAX/XMLReader.h>
+#include <Poco/DOM/DOMWriter.h>
+#include <sstream>
 #include <Poco/XML/XMLString.h>
 #include <algorithm>
 #include <cctype>
@@ -131,6 +133,9 @@ void docx_parser::traverse(Node* node, wxString& text, std::vector<heading_info>
 		if (local_name == "p") {
 			process_paragraph(element, text, headings, doc, rels);
 			return; // process_paragraph handles its children
+		} else if (local_name == "tbl") {
+			process_table(element, text, doc);
+			return; // process_table handles its children
 		}
 	}
 	Node* child = node->firstChild();
@@ -361,4 +366,64 @@ std::string docx_parser::get_run_text(Element* run_element) {
 		child = child->nextSibling();
 	}
 	return run_text;
+}
+
+void docx_parser::process_table(Element* table_element, wxString& text, document* doc) {
+    std::stringstream ss;
+    DOMWriter writer;
+    writer.writeNode(ss, table_element);
+    const std::string table_xml = ss.str();
+
+    wxString table_text;
+    const size_t table_start_offset = text.length();
+
+    Node* row_node = table_element->firstChild();
+    while (row_node != nullptr) {
+        if (row_node->nodeType() == Node::ELEMENT_NODE) {
+            auto* row_element = dynamic_cast<Element*>(row_node);
+            if (row_element->localName() == "tr") {
+                Node* cell_node = row_element->firstChild();
+                while (cell_node != nullptr) {
+                    if (cell_node->nodeType() == Node::ELEMENT_NODE) {
+                        auto* cell_element = dynamic_cast<Element*>(cell_node);
+                        if (cell_element->localName() == "tc") {
+                            wxString cell_text;
+                            Node* p_node = cell_element->firstChild();
+                            while (p_node != nullptr) {
+                                if (p_node->nodeType() == Node::ELEMENT_NODE) {
+                                    auto* p_element = dynamic_cast<Element*>(p_node);
+                                    if (p_element->localName() == "p") {
+                                        Node* r_node = p_element->firstChild();
+                                        while (r_node != nullptr) {
+                                            if (r_node->nodeType() == Node::ELEMENT_NODE) {
+                                                auto* r_element = dynamic_cast<Element*>(r_node);
+                                                if (r_element->localName() == "r") {
+                                                    cell_text += wxString::FromUTF8(get_run_text(r_element));
+                                                }
+                                            }
+                                            r_node = r_node->nextSibling();
+                                        }
+                                    }
+                                }
+                                p_node = p_node->nextSibling();
+                            }
+                            cell_text.Trim(true).Trim(false);
+                            table_text += cell_text;
+                            table_text += "\t";
+                        }
+                    }
+                    cell_node = cell_node->nextSibling();
+                }
+                table_text.RemoveLast(); // Remove trailing tab
+                table_text += "\n";
+            }
+        }
+        row_node = row_node->nextSibling();
+    }
+
+    if (!table_text.IsEmpty()) {
+        text += table_text;
+        text += "\n";
+        doc->buffer.add_table(table_start_offset, table_text, wxString::FromUTF8(table_xml));
+    }
 }

@@ -84,4 +84,5 @@ private:
 	[[nodiscard]] static std::string_view get_tag_name(lxb_dom_element_t* element) noexcept;
 	[[nodiscard]] static std::string get_element_text(lxb_dom_element_t* element);
 	[[nodiscard]] std::string extract_table_text(lxb_dom_node_t* table_node);
+	[[nodiscard]] std::string get_plain_text_for_table(lxb_dom_node_t* table_node);
 };

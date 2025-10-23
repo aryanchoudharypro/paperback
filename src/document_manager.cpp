@@ -17,6 +17,12 @@
 #include "main_window.hpp"
 #include "parser.hpp"
 #include "utils.hpp"
+#include "xml_to_text.hpp"
+#include <Poco/DOM/DOMParser.h>
+#include <Poco/SAX/InputSource.h>
+#include <Poco/AutoPtr.h>
+#include <Poco/DOM/Document.h>
+#include <sstream>
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
@@ -548,7 +554,23 @@ void document_manager::activate_current_table() {
 	if (current_pos < table_marker->pos || current_pos > (table_marker->pos + table_marker->text.length())) {
 		return;
 	}
-	table_dialog dlg(&main_win, _("Table"), table_marker->ref);
+
+	wxString table_html = table_marker->ref;
+	if (table_html.StartsWith("<w:tbl")) {
+		try {
+			std::istringstream iss(table_html.ToStdString());
+			Poco::XML::InputSource src(iss);
+			Poco::XML::DOMParser parser;
+			parser.setFeature(Poco::XML::XMLReader::FEATURE_NAMESPACES, true);
+			Poco::AutoPtr<Poco::XML::Document> xml_doc = parser.parse(&src);
+			table_html = wxString::FromUTF8(xml_to_text::extract_table_text(xml_doc->documentElement()));
+		} catch (const Poco::Exception& e) {
+			wxMessageBox("XML parsing error: " + wxString(e.displayText()), "Error", wxICON_ERROR);
+			return;
+		}
+	}
+
+	table_dialog dlg(&main_win, _("Table"), table_html);
 	dlg.ShowModal();
 }
 

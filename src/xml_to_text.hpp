@@ -37,6 +37,7 @@ public:
 	[[nodiscard]] const std::vector<size_t>& get_section_offsets() const noexcept { return section_offsets; }
 	[[nodiscard]] const std::vector<table_info>& get_tables() const noexcept { return tables; }
 	void clear() noexcept;
+	[[nodiscard]] static std::string extract_table_text(Poco::XML::Node* table_node);
 
 private:
 	std::vector<std::string> lines;
@@ -57,5 +58,5 @@ private:
 	size_t get_current_text_position() const;
 	[[nodiscard]] static constexpr bool is_block_element(std::string_view tag_name) noexcept;
 	[[nodiscard]] static std::string get_element_text(Poco::XML::Element* element);
-	[[nodiscard]] std::string extract_table_text(Poco::XML::Node* table_node);
+	[[nodiscard]] std::string get_plain_text_for_table(Poco::XML::Node* table_node);
 };
