@@ -24,9 +24,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          vcpkg/downloads
-          vcpkg/packages
-          vcpkg/buildtrees
+          vcpkg/bin/downloads
+          vcpkg/bin/packages
+          vcpkg/bin/buildtrees
+          build/vcpkg_installed
         key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
         restore-keys: |
           ${{ runner.os }}-vcpkg-
@@ -44,7 +45,7 @@ jobs:
     - name: Build
       run: |
         cd build
-        cmake --build . --config Release
+        cmake --build . --target release
     
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
