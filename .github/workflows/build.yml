@@ -3,7 +3,7 @@ name: Build Paperback
 on:
   push:
     branches:
-      - '**'  # triggers on every branch push
+      - '**'
 
 jobs:
   build:
@@ -15,6 +15,16 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Cache VCPKG artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/vcpkg_installed
+            vcpkg/bin
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
       - name: Install dependencies
         shell: pwsh
         run: |
@@ -22,17 +32,19 @@ jobs:
           choco install ninja -y
           choco install pandoc -y
 
-      - name: Configure build
-        shell: pwsh
+      - name: Configure build with MSVC x64
+        shell: cmd
         run: |
-          mkdir build
-          cd build
+          "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" &&
+          mkdir build &&
+          cd build &&
           cmake .. -GNinja
 
-      - name: Build project
-        shell: pwsh
+      - name: Build project with MSVC x64
+        shell: cmd
         run: |
-          cd build
+          "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" &&
+          cd build &&
           cmake --build .
 
       - name: Upload build artifacts
