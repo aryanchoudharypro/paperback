@@ -53,4 +53,5 @@ jobs:
         name: paperback-build
         path: |
           build/paperback.zip
+          build/paperback_setup.exe
         retention-days: 30
