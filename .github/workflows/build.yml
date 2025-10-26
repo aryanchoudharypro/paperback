@@ -2,7 +2,6 @@ name: Build Paperback
 
 on:
   push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -57,3 +56,31 @@ jobs:
           build/paperback.zip
           build/paperback_setup.exe
         retention-days: 30
+
+    - name: Get latest stable tag
+      id: get_tag
+      run: |
+        git fetch --tags
+        echo "tag=$(git tag --sort=-creatordate | grep -E '^v?0\.[0-9]+(\.[0-9]+)?$' | head -n 1)" >> $GITHUB_OUTPUT
+
+    - name: Generate changelog since last stable tag
+      id: changelog
+      run: |
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        git log ${{ steps.get_tag.outputs.tag }}..HEAD --pretty=format:"- %s" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Create or update latest release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: latest
+        name: Development Build
+        body: |
+          Changes since ${{ steps.get_tag.outputs.tag }}:
+          ${{ steps.changelog.outputs.changelog }}
+        files: |
+          build/paperback.zip
+          build/paperback_setup.exe
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
