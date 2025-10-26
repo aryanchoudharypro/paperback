@@ -1,0 +1,42 @@
+name: Build Paperback
+
+on:
+  push:
+    branches:
+      - '**'  # triggers on every branch push
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+          choco install ninja -y
+          choco install pandoc -y
+
+      - name: Configure build
+        shell: pwsh
+        run: |
+          mkdir build
+          cd build
+          cmake .. -GNinja
+
+      - name: Build project
+        shell: pwsh
+        run: |
+          cd build
+          cmake --build .
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperback-build
+          path: build/paperback.zip
