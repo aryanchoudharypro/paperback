@@ -8,18 +8,18 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
-    
+
     - name: Setup MSVC
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x64
-    
+
     - name: Cache VCPKG packages
       uses: actions/cache@v4
       with:
@@ -31,22 +31,24 @@ jobs:
         key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
         restore-keys: |
           ${{ runner.os }}-vcpkg-
-    
+
     - name: Install CMake, Ninja, and Pandoc
       run: |
         choco install cmake ninja pandoc -y
-    
+
     - name: Configure CMake
       run: |
-        mkdir build
+        if not exist build (
+          mkdir build
+        )
         cd build
         cmake .. -GNinja
-    
+
     - name: Build
       run: |
         cd build
         cmake --build . --target release
-    
+
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
