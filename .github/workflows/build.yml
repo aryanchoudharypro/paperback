@@ -2,53 +2,54 @@ name: Build Paperback
 
 on:
   push:
-    branches:
-      - '**'
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
-
+    
     steps:
-      - name: Checkout repository with submodules
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Cache VCPKG artifacts
-        uses: actions/cache@v4
-        with:
-          path: |
-            build/vcpkg_installed
-            vcpkg/bin
-          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-${{ runner.os }}-
-
-      - name: Install dependencies
-        shell: pwsh
-        run: |
-          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
-          choco install ninja -y
-          choco install pandoc -y
-
-      - name: Configure build with MSVC x64
-        shell: cmd
-        run: |
-          "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" &&
-          mkdir build &&
-          cd build &&
-          cmake .. -GNinja
-
-      - name: Build project with MSVC x64
-        shell: cmd
-        run: |
-          "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" &&
-          cd build &&
-          cmake --build .
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: paperback-build
-          path: build/paperback.zip
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    
+    - name: Setup MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+    
+    - name: Cache VCPKG packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          vcpkg/downloads
+          vcpkg/packages
+          vcpkg/buildtrees
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-
+    
+    - name: Install CMake and Ninja
+      run: |
+        choco install cmake ninja -y
+    
+    - name: Configure CMake
+      run: |
+        mkdir build
+        cd build
+        cmake .. -GNinja
+    
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: paperback-build
+        path: |
+          build/paperback.zip
+        retention-days: 30
