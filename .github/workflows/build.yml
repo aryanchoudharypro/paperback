@@ -44,6 +44,8 @@ jobs:
         install: >-
           gettext
           mingw-w64-ucrt-x86_64-gettext-tools
+    # Note: This step below might be redundant since we explicitly set PATH in the next steps,
+    # but keeping it doesn't hurt as long as the next steps prioritize $env:PATH correctly.
     - name: Add MSYS2 to PATH for CMake
       run: |
         echo "C:\msys64\ucrt64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
@@ -53,10 +55,18 @@ jobs:
           New-Item -ItemType Directory -Path build
         }
         cd build
-        cmake .. -GNinja
+        # FIX: $env:PATH must come FIRST to prioritize MSVC tools (link.exe) over MSYS2 tools
+        $env:PATH = "$env:PATH;C:\msys64\ucrt64\bin;C:\msys64\usr\bin"
+        cmake .. -GNinja `
+          -DGETTEXT_ROOT=C:/msys64 `
+          -DGETTEXT_MSGFMT_EXECUTABLE=C:/msys64/usr/bin/msgfmt.exe `
+          -DGETTEXT_XGETTEXT_EXECUTABLE=C:/msys64/usr/bin/xgettext.exe `
+          -DGETTEXT_MSGMERGE_EXECUTABLE=C:/msys64/usr/bin/msgmerge.exe
     - name: Build
       run: |
         cd build
+        # FIX: $env:PATH must come FIRST here as well
+        $env:PATH = "$env:PATH;C:\msys64\ucrt64\bin;C:\msys64\usr\bin"
         cmake --build . --target release
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
