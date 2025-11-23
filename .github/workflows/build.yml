@@ -56,9 +56,7 @@ jobs:
           New-Item -ItemType Directory -Path build
         }
         cd build
-        # Prioritize MSVC tools
         $env:PATH = "$env:PATH;C:\msys64\ucrt64\bin;C:\msys64\usr\bin"
-        # Fixes CMake CMP0144 warning by using Mixed Case variable
         cmake .. -GNinja `
           -DGettext_ROOT=C:/msys64 `
           -DGETTEXT_MSGFMT_EXECUTABLE=C:/msys64/usr/bin/msgfmt.exe `
@@ -83,7 +81,6 @@ jobs:
     - name: Get latest tag reachable from HEAD
       id: get_tag
       shell: bash
-      # '|| echo ""' prevents the build from crashing if no tags exist
       run: |
         git fetch --tags
         TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
@@ -96,14 +93,12 @@ jobs:
         PREV_TAG="${{ steps.get_tag.outputs.tag }}"
         if [ -z "$PREV_TAG" ]; then
           echo "No previous tag found. Using only the current commit."
-          # FIX: Added '-1' to limit log to the single latest commit
           COMMITS=$(git log -1 --oneline --pretty=format:"- %h: %s" HEAD)
         else
           echo "Generating log from $PREV_TAG to HEAD."
           COMMITS=$(git log --oneline --pretty=format:"- %h: %s" "$PREV_TAG"..HEAD)
         fi
         
-        # Sanitize multiline strings for GITHUB_OUTPUT
         COMMITS="${COMMITS//'%'/'%25'}"
         COMMITS="${COMMITS//$'\n'/'%0A'}"
         echo "commits=$COMMITS" >> $GITHUB_OUTPUT
